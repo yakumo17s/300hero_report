@@ -61,7 +61,8 @@ class Example(QWidget):
         #self.setCentralWidget(textEdit)
 
         self.qle = QLineEdit("蔽月八云")
-
+        self.user = self.qle.text()
+        print(self.user, '1')
         btn = QPushButton('查询', self)
         #btn.setToolTip('This is a <b>QPushButton</b> widget')
         btn.resize(btn.sizeHint())
@@ -160,16 +161,17 @@ class Example(QWidget):
 
 
 
-    def search(self):
+    def search_a(self):
         if __name__ == '__main__':
-
-            p = Process(target=self.a())
+            #print(user, '2')
+            p = Process(target=self.a, args=(self.user, ))
             p.start()
             p.join()
 
-    def a(self):
-
+    def search(self):
+        print(self.user)
         print(__name__)
+        #print(user, '3')
 
 
         #process = CrawlerProcess(get_project_settings())
@@ -185,7 +187,9 @@ class Example(QWidget):
 
         #runner = CrawlerProcess()
         #dfs = set()
-        runner.crawl('JumpReport')
+        print('a')
+        runner.crawl('JumpReport', user=self.user)
+        print(self.user)
         d = runner.join()
         #dfs.add(d)
         #defer.DeferredList(dfs).addBoth(lambda _: reactor.stop())
@@ -284,7 +288,7 @@ class Example(QWidget):
 
     def closeEvent(self, event):
 
-        reply = QMessageBox.question(self, 'Message', "Quit?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(self, 'Message', "Quit?", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
         if reply == QMessageBox.Yes:
             event.accept()

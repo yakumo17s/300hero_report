@@ -3,7 +3,7 @@ import re
 from scrapy import Selector
 from scrapy import Request
 from ..items import *
-
+                       
 
 class JumpReport(scrapy.Spider):
 
