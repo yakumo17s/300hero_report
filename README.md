@@ -17,8 +17,6 @@ python 300hero.py
 
 ### TODO
 
-* 重复查询会报错 twisted.internet.error.ReactorNotRestartable （考虑一下多进程）
-
 * 把数据显示规整一些 （也许需要pandas和matplotlib）
 
 * 加点图表（团分变化图……）
@@ -29,3 +27,8 @@ python 300hero.py
 
 * 具体场次的数据，不再使用爬虫，改用api获取
 
+### Bug
+
+* 重复查询会报错 twisted.internet.error.ReactorNotRestartable （考虑一下多进程）
+
+* 长时间没打会不显示表格，导致缺少团分信息而无法显示整个个人信息

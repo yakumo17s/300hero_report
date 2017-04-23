@@ -62,6 +62,7 @@ class Example(QWidget):
 
         self.qle = QLineEdit("蔽月八云")
         self.user = self.qle.text()
+        self.para = "user={}".format(self.user)
         print(self.user, '1')
         btn = QPushButton('查询', self)
         #btn.setToolTip('This is a <b>QPushButton</b> widget')
@@ -161,10 +162,10 @@ class Example(QWidget):
 
 
 
-    def search_a(self):
+    def searchd(self):
         if __name__ == '__main__':
             #print(user, '2')
-            p = Process(target=self.a, args=(self.user, ))
+            p = Process(target=self.a)
             p.start()
             p.join()
 

@@ -1,5 +1,6 @@
 import scrapy
 import re
+import requests
 from scrapy import Selector
 from scrapy import Request
 from ..items import *
@@ -13,6 +14,7 @@ class JumpReport(scrapy.Spider):
     def __init__(self, user=None, *args, **kwargs):
         super(JumpReport, self).__init__(*args, **kwargs)
         self.user = user
+        print(user)
         self.start_urls = [
             "http://300report.jumpw.com/list.html?name=%s" % user
         ]
@@ -40,18 +42,45 @@ class JumpReport(scrapy.Spider):
         item['update_time'] = update_time
 
         server_rank = selector.xpath("//*[@class='datatable'][1]/tr")
-        for tr in server_rank:
-            if "团队实力" in tr.xpath("string(.)").extract_first():
-                rank = re.search(r'(第\d*名)', tr.xpath("td[2]/text()").extract_first()).group(1)
-                strength = tr.xpath("td[4]/text()").extract_first()
+        if server_rank:
+            for tr in server_rank:
+                if "团队实力" in tr.xpath("string(.)").extract_first():
+                    rank = re.search(r'(第\d*名)', tr.xpath("td[2]/text()").extract_first()).group(1)
+                    strength = tr.xpath("td[4]/text()").extract_first()
+                    item['strength'] = strength
+                    item['rank'] = rank
+                    break
+        else:
+            report = selector.xpath(
+                "/html/body/div/div/div/div/table[@class='datatable'][last()]/tr[2]")
+            uri_js = report.xpath("@onclick").extract_first()
 
-                item['rank'] = rank
-                item['strength'] = strength
+            match_id = re.search(r"id=(\d*)", uri_js).group(1)
+            api = requests.get("http://300report.jumpw.com/api/getmatch?id={}".format(match_id))
 
-                yield item
-                break
+            if report.xpath("td[3]") == "胜利":
+                win_side = api["Match"]["WinSide"]
+                for role in win_side:
+                    if role["RoleName"] == name:
+                        strength = role["ELO"]
+                        print(strength)
+                        item['strength'] = strength
+                        break
+            else:
+                lose_side = api["Match"]["LoseSide"]
+                for role in lose_side:
+                    if role["RoleName"] == name:
+                        strength = role["ELO"]
+                        print(strength)
+                        item['strength'] = strength
+                        break
 
-        report_list = selector.xpath("/html/body/div/div/div/div/table[@class='datatable'][2]/tr[position()>1]")
+
+        item['rank'] = 'a'
+        yield item
+
+
+        report_list = selector.xpath("/html/body/div/div/div/div/table[@class='datatable'][last()]/tr[position()>1]")
         for report in report_list:
             self.count += 1
             print("my_count" + str(self.count))
