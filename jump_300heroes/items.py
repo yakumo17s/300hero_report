@@ -14,8 +14,7 @@ class Player(scrapy.Item):
     win = scrapy.Field()
     match_count = scrapy.Field()
     update_time = scrapy.Field()
-    rank = scrapy.Field()
-    strength = scrapy.Field()
+    elo = scrapy.Field()
 
 
 class ResultList(scrapy.Item):
@@ -27,6 +26,7 @@ class ResultList(scrapy.Item):
 
 
 class GameResult(scrapy.Item):
+    name = scrapy.Field()
     match_id = scrapy.Field()
     kill = scrapy.Field()
     death = scrapy.Field()
@@ -35,3 +35,6 @@ class GameResult(scrapy.Item):
     date = scrapy.Field()
     time = scrapy.Field()
     head = scrapy.Field()
+    role = scrapy.Field()
+    level = scrapy.Field()
+    result = scrapy.Field()

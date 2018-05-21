@@ -8,10 +8,9 @@ from PyQt5.QtWidgets import (QWidget, QLineEdit, QTextEdit, QPushButton,
                              QApplication, QMessageBox, )
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot, Qt
-from scrapy.crawler import CrawlerRunner, reactor
 
-from jump_300heroes.spiders.my_report import JumpReport
 from db import db_handle
+from model import Player, PlayerData, GameData
 
 
 class Main(QWidget):
@@ -45,8 +44,6 @@ class Main(QWidget):
 
         self.qle = QLineEdit("")
         self.user = self.qle.text()
-        self.para = "user={}".format(self.user)
-        print(self.user, '1')
         btn = QPushButton('查询', self)
         # btn.setToolTip('This is a <b>QPushButton</b> widget')
         btn.resize(btn.sizeHint())
@@ -105,7 +102,11 @@ class Main(QWidget):
         self.battle_table.setColumnCount(8)
         # 设置表头
         self.battle_table.setHorizontalHeaderLabels(
-            ['match_id', 'head', 'date', 'time', 'kill_count', 'death', 'support', 'score'])
+            [
+                'role', 'level', 'kill_count',
+                'death', 'support', 'score', 'date', 'time'
+            ]
+        )
         # 隔行变色
         self.battle_table.setAlternatingRowColors(True)
         # 整行选中
@@ -132,48 +133,56 @@ class Main(QWidget):
         a = self.A()
 
     def spider(self, name):
-        subprocess.call('ls')
-        subprocess.call('scrapy crawl JumpReport -a user="{}"'.format(name), shell=True)
+        subprocess.call('scrapy crawl JumpReport -a user="{}" --loglevel WARN'.format(name), shell=True)
+        print('complete')
 
     def search(self):
 
         # 脚本执行爬虫代码
         name = self.qle.text()
 
+        if not name:
+            return
+
         self.spider(name)
+
+        player = Player.select().where(Player.name == name)
+
+        if len(player):
+            player = player[0]
+
+            text = "角色名:  {}\n胜场:    {}\n总场数:  {}\n团分:    {}\n等级:    {}\n更新时间: {}".format(
+                player.name, player.win, player.match_count, player.elo, player.level, player.update_time)
+
+            self.txt.setText(text)
 
         db = db_handle()
         with db as con:
-            sql = "select * from player where name = '{}' order by update_time".format(name)
-            con.execute(sql)
-            player = con.fetchone()
-            if player:
-                id, name, win, match_count, strength, level, update_time, rank = player
-                text = "角色名:  {}\n胜场:    {}\n总场数:  {}\n团分:    {}\n团分排行: {}\n等级:    {}\n更新时间: {}".format(
-                    name, win, match_count, strength, rank, level, update_time)
-
-                self.txt.setText(text)
-
             sql = "select * from player_data where name = '{}' order by date".format(name)
             con.execute(sql)
             player_data = con.fetchall()
+            # player_data = PlayerData.select().where(PlayerData.name == name)
             a = ""
             for data in player_data:
                 a += str(data)
                 a += "\n"
             self.battle.setText(str(a))
 
-            sql = "select * from game_data order by match_id desc"
+            sql = "select role, level, kill_count, death, support, score, date, time from game_data where name = '{}' order by match_id desc".format(
+                name)
             con.execute(sql)
             game_data = con.fetchall()
+
+            # game_data = GameData.select().where(GameData.name == name)
             a = ""
             l = 0
             self.battle_table.setRowCount(len(game_data))
+
             for data in game_data:
-                a += str(data[1:])
+                a += str(data)
 
                 for i in range(self.battle_table.columnCount()):
-                    item = QTableWidgetItem(str(data[i + 1]))
+                    item = QTableWidgetItem(str(data[i]))
                     # 设置填入数据的排列位置（左右居中| 上下居中）
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     self.battle_table.setItem(l, i, item)

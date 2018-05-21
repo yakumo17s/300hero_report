@@ -1,4 +1,4 @@
-from peewee import (MySQLDatabase, Model, CharField)
+from peewee import (MySQLDatabase, Model, CharField, IntegerField)
 
 db = MySQLDatabase(
     host='localhost',
@@ -21,7 +21,6 @@ class Player(BaseModel):
     elo = CharField()
     level = CharField()
     update_time = CharField()
-    rank = CharField()
 
     class Meta:
         table_name = 'player'
@@ -39,6 +38,7 @@ class PlayerData(BaseModel):
 
 
 class GameData(BaseModel):
+    name = CharField()
     match_id = CharField()
     head = CharField()
     kill_count = CharField()
@@ -47,6 +47,9 @@ class GameData(BaseModel):
     score = CharField()
     date = CharField()
     time = CharField()
+    role = CharField()
+    level = CharField()
+    result = CharField()
 
     class Meta:
         table_name = 'game_data'
