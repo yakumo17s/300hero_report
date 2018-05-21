@@ -1,37 +1,20 @@
 import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import QCoreApplication
+import subprocess
 
-import pymysql
 import requests
+from PyQt5.QtWidgets import (QWidget, QLineEdit, QTextEdit, QPushButton,
+                             QAction, qApp, QGridLayout, QTableWidget,
+                             QAbstractItemView, QTableWidgetItem, QDesktopWidget,
+                             QApplication, QMessageBox, )
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import pyqtSlot, Qt
+from scrapy.crawler import CrawlerRunner, reactor
 
-from twisted.internet import reactor, defer
-from scrapy.crawler import CrawlerRunner, CrawlerProcess
-from scrapy.utils.project import get_project_settings
-from spider.jump_300heroes.jump_300heroes.spiders.my_report import JumpReport
-from scrapy.settings import Settings
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-
-from multiprocessing import Process
-
-
+from jump_300heroes.spiders.my_report import JumpReport
+from db import db_handle
 
 
-def db_handle():
-
-    con = pymysql.connect(
-        host='localhost',
-        user='web',
-        passwd='web',
-        charset='utf8',
-        database='heroes'
-    )
-    return con
-
-class Example(QWidget):
-
+class Main(QWidget):
     class A(QWidget):
 
         def __init__(self):
@@ -53,24 +36,24 @@ class Example(QWidget):
 
     def initUI(self):
 
-        #QToolTip.setFont(QFont('SanSerif', 10))
+        # QToolTip.setFont(QFont('SanSerif', 10))
 
-        #self.setToolTip('This is a <b>QWidget</b> widget')
+        # self.setToolTip('This is a <b>QWidget</b> widget')
 
-        #textEdit = QTextEdit()
-        #self.setCentralWidget(textEdit)
+        # textEdit = QTextEdit()
+        # self.setCentralWidget(textEdit)
 
-        self.qle = QLineEdit("蔽月八云")
+        self.qle = QLineEdit("")
         self.user = self.qle.text()
         self.para = "user={}".format(self.user)
         print(self.user, '1')
         btn = QPushButton('查询', self)
-        #btn.setToolTip('This is a <b>QPushButton</b> widget')
+        # btn.setToolTip('This is a <b>QPushButton</b> widget')
         btn.resize(btn.sizeHint())
         btn.clicked.connect(self.search)
 
         self.txt = QTextEdit()
-        #self.txt.textChanged.connect(self.adjustSize)
+        # self.txt.textChanged.connect(self.adjustSize)
 
         self.battle = QTextEdit()
 
@@ -78,26 +61,24 @@ class Example(QWidget):
 
         self.create_table()
 
-
-
         # 名称不能用Quit、Exit，用了就无法显示，原因不明
         exitAction = QAction('Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('application')
         exitAction.triggered.connect(qApp.quit)
 
-        #self.statusBar()
+        # self.statusBar()
 
-        #menubar = QMainWindow.menuBar()
+        # menubar = QMainWindow.menuBar()
 
         # Mac OS的状态栏显示不一样
-        #menubar.setNativeMenuBar(False)
+        # menubar.setNativeMenuBar(False)
 
-        #fileMenu = menubar.addMenu('&File')
-        #fileMenu.addAction(exitAction)
+        # fileMenu = menubar.addMenu('&File')
+        # fileMenu.addAction(exitAction)
 
-        #toolbar = self.addToolBar('Exit')
-        #toolbar.addAction(exitAction)
+        # toolbar = self.addToolBar('Exit')
+        # toolbar.addAction(exitAction)
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -140,102 +121,27 @@ class Example(QWidget):
     def on_click(self):
         currentQTableWidgetItem = self.battle_table.selectedItems()[0]
         # 点击的行包含的比赛id
-        #match_id = self.battle_table.item(currentQTableWidgetItem.row(), 0).text()
+        # match_id = self.battle_table.item(currentQTableWidgetItem.row(), 0).text()
         match_id = currentQTableWidgetItem.text()
         print(match_id)
-        self.showDialog(match_id)
+        # self.showDialog(match_id)
 
     def showDialog(self, match_id):
 
         data = requests.get('http://300report.jumpw.com/api/getmatch?id={}'.format(match_id))
         a = self.A()
 
-        ## 启动爬虫，获取该场比赛所有人的数据
-        #runner = CrawlerRunner(get_project_settings())
-        #runner.crawl('JumpReport')
-        #d = runner.join()
-        #d.addBoth(lambda _: reactor.stop())
-        #reactor.run()  # 阻塞运行爬虫
-        #
-        #text, ok = QInputDialog.getText(self, 'Input Dialog',
-        #                                'Enter your name:')
-
-
-
-    def searchd(self):
-        if __name__ == '__main__':
-            #print(user, '2')
-            p = Process(target=self.a)
-            p.start()
-            p.join()
+    def spider(self, name):
+        subprocess.call('ls')
+        subprocess.call('scrapy crawl JumpReport -a user="{}"'.format(name), shell=True)
 
     def search(self):
-        print(self.user)
-        print(__name__)
-        #print(user, '3')
 
-
-        #process = CrawlerProcess(get_project_settings())
-        #process.crawl('JumpReport')
-        #process.start()
-        #process.stop()
-        #process.put()
         # 脚本执行爬虫代码
-        runner = CrawlerRunner(get_project_settings())
-
-        #def search(runner, keyword):
-        #    return runner.crawl(JumpReport, keyword)
-
-        #runner = CrawlerProcess()
-        #dfs = set()
-        print('a')
-        runner.crawl('JumpReport', user=self.user)
-        print(self.user)
-        d = runner.join()
-        #dfs.add(d)
-        #defer.DeferredList(dfs).addBoth(lambda _: reactor.stop())
-        d.addBoth(lambda _: reactor.stop())
-        #search(runner, "abcd")
-        #search(runner, "beat")
-        #runner.start()
-        reactor.run()  # 阻塞运行爬虫
-
-        print("complete")
-
-
-        # runner = CrawlerRunner(get_project_settings())
-        # dfs = set()
-        # for domain in range(2):
-        #     d = runner.crawl('JumpReport')
-        #     dfs.add(d)
-        #
-        # defer.DeferredList(dfs).addBoth(lambda _: reactor.stop())
-        # reactor.run()  # the script will block here until all crawling jobs are finished
-
-        # runner = CrawlerRunner(get_project_settings())
-        #
-        # @defer.inlineCallbacks
-        # def crawl():
-        #     for domain in range(2):
-        #         yield runner.crawl('JumpReport')
-        #     reactor.stop()
-        #
-        # crawl()
-        # reactor.run()  # the script will block here until the last crawl call is finished
-
-        # settings = Settings({'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'})
-        # runner = CrawlerRunner(settings)
-        # 
-        # d = runner.crawl(JumpReport)
-        # d.addBoth(lambda _: reactor.stop())
-        # reactor.run() # the script will block here until the crawling is finished
-
-
-        # runner = CrawlerProcess(get_project_settings())
-        # runner.crawl(JumpReport)
-        # runner.start()
-
         name = self.qle.text()
+
+        self.spider(name)
+
         db = db_handle()
         with db as con:
             sql = "select * from player where name = '{}' order by update_time".format(name)
@@ -245,9 +151,9 @@ class Example(QWidget):
                 id, name, win, match_count, strength, level, update_time, rank = player
                 text = "角色名:  {}\n胜场:    {}\n总场数:  {}\n团分:    {}\n团分排行: {}\n等级:    {}\n更新时间: {}".format(
                     name, win, match_count, strength, rank, level, update_time)
-                        
+
                 self.txt.setText(text)
-            
+
             sql = "select * from player_data where name = '{}' order by date".format(name)
             con.execute(sql)
             player_data = con.fetchall()
@@ -265,10 +171,8 @@ class Example(QWidget):
             self.battle_table.setRowCount(len(game_data))
             for data in game_data:
                 a += str(data[1:])
-                print(type(data))
 
                 for i in range(self.battle_table.columnCount()):
-
                     item = QTableWidgetItem(str(data[i + 1]))
                     # 设置填入数据的排列位置（左右居中| 上下居中）
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
@@ -277,8 +181,7 @@ class Example(QWidget):
                 a += "\n"
                 self.player_status.setText(str(a))
                 l += 1
-            #for i in range(len(list(a))):
-            #    self.battle_table.setLayout(str(a))
+        print('search over')
 
     def center(self):
 
@@ -309,9 +212,8 @@ class BatterReport(QWidget):
 
 
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
 
-    ex = Example()
+    ex = Main()
 
     sys.exit(app.exec_())

@@ -1,31 +1,31 @@
-import scrapy
 import re
+
 import requests
-from scrapy import Selector
-from scrapy import Request
-from ..items import *
-                       
+from scrapy import Selector, Request, Spider
 
-class JumpReport(scrapy.Spider):
+from jump_300heroes.items import Player, ResultList, GameResult
 
+
+class JumpReport(Spider):
     name = "JumpReport"
     host = "http://300report.jumpw.com/"
-    
+    count = 0
+
     def __init__(self, user=None, *args, **kwargs):
         super(JumpReport, self).__init__(*args, **kwargs)
         self.user = user
-        print(user)
+        print('cls', self.user)
         self.start_urls = [
             "http://300report.jumpw.com/list.html?name=%s" % user
         ]
-        
-    count = 0
 
     def start_requests(self):
+        print('net')
         for url in self.start_urls:
             yield Request(url=url, callback=self.parse_topic)
 
     def parse_topic(self, response):
+        print('rp')
         selector = Selector(response)
         info = selector.xpath("/html/body/div/div/div/div/table[@class='info']")
         name = info.xpath("tr[1]/td[2]/text()").extract_first()
@@ -75,10 +75,8 @@ class JumpReport(scrapy.Spider):
                         item['strength'] = strength
                         break
 
-
         item['rank'] = 'a'
         yield item
-
 
         report_list = selector.xpath("/html/body/div/div/div/div/table[@class='datatable'][last()]/tr[position()>1]")
         for report in report_list:
@@ -107,7 +105,7 @@ class JumpReport(scrapy.Spider):
             item["result"] = result
             yield item
             yield Request(url=url, callback=self.parse_page)
-    
+
         next_url_line = selector.xpath("/html/body/div/div/div/div/a[last()]")
         str_next_url_line = next_url_line.xpath("text()").extract_first()
         if "下一页" in str_next_url_line:
@@ -149,8 +147,7 @@ class JumpReport(scrapy.Spider):
                 yield item
                 break
 
-
-#class BatterReport(scrapy.Spider):
+# class BatterReport(scrapy.Spider):
 #    name = "BatterReport"
 #    host = "http://300report.jumpw.com/"
 #    start_urls = [
