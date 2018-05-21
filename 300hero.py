@@ -103,7 +103,7 @@ class Main(QWidget):
         # 设置表头
         self.battle_table.setHorizontalHeaderLabels(
             [
-                'role', 'level', 'kill_count',
+                'result', 'role', 'level', 'kill_count',
                 'death', 'support', 'score', 'date', 'time'
             ]
         )
@@ -133,6 +133,7 @@ class Main(QWidget):
         a = self.A()
 
     def spider(self, name):
+        # 子进程调用防止崩溃
         subprocess.call('scrapy crawl JumpReport -a user="{}" --loglevel WARN'.format(name), shell=True)
         print('complete')
 
@@ -144,8 +145,13 @@ class Main(QWidget):
         if not name:
             return
 
+        # 执行爬虫
         self.spider(name)
 
+        # 数据填充表格
+        self.show_search_data(name)
+
+    def show_search_data(self, name):
         player = Player.select().where(Player.name == name)
 
         if len(player):
@@ -158,7 +164,10 @@ class Main(QWidget):
 
         db = db_handle()
         with db as con:
-            sql = "select * from player_data where name = '{}' order by date".format(name)
+            sql = """select hero, result, date 
+                     from player_data 
+                     where name = '{}' 
+                     order by date""".format(name)
             con.execute(sql)
             player_data = con.fetchall()
             # player_data = PlayerData.select().where(PlayerData.name == name)
@@ -168,8 +177,11 @@ class Main(QWidget):
                 a += "\n"
             self.battle.setText(str(a))
 
-            sql = "select role, level, kill_count, death, support, score, date, time from game_data where name = '{}' order by match_id desc".format(
-                name)
+            sql = """select result, role, level, kill_count, death, support,
+                     score, date, time 
+                     from game_data 
+                     where name = '{}' 
+                     order by match_id desc""".format(name)
             con.execute(sql)
             game_data = con.fetchall()
 
